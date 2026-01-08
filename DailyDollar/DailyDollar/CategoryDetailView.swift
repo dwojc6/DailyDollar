@@ -35,28 +35,22 @@ struct CategoryDetailView: View {
     }
     
     var body: some View {
-        let budgetBinding = Binding<String>(
-            get: { 
-                let val = categoryBinding.wrappedValue.budget
-                return val.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(val)) : String(val)
-            },
-            set: { 
-                if let val = Double($0) {
-                    var newCategory = categoryBinding.wrappedValue
-                    newCategory.budget = val
-                    categoryBinding.wrappedValue = newCategory
-                }
-            }
-        )
         
         return List {
             Section("Category Settings") {
                 TextField("Name", text: categoryBinding.name)
-                TextField("", value: Binding(
-                    get: { Double(budgetBinding.wrappedValue) ?? 0 },
-                    set: { budgetBinding.wrappedValue = String($0) }
-                ), format: .currency(code: "USD"))
-                    .keyboardType(.decimalPad)
+                HStack {
+                    Text("$")
+                    TextField("", text: $budgetString, prompt: Text("0.00"))
+                        .keyboardType(.decimalPad)
+                        .onChange(of: budgetString) { _, newValue in
+                            if let doubleValue = Double(newValue) {
+                                var newCategory = categoryBinding.wrappedValue
+                                newCategory.budget = doubleValue
+                                categoryBinding.wrappedValue = newCategory
+                            }
+                        }
+                }
             }
             
             Section("Transactions (\(categoryTransactions.count))") {
@@ -105,6 +99,9 @@ struct CategoryDetailView: View {
         .navigationTitle(category.name)
         .sheet(isPresented: $showingAddTransaction) {
             AddTransactionView(categoryId: category.id)
+        }
+        .onAppear {
+            budgetString = String(format: "%.2f", category.budget)
         }
     }
 }
