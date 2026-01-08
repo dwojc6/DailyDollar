@@ -27,6 +27,12 @@ struct ExpectedExpense: Identifiable, Codable, Equatable {
     var note: String = ""
 }
 
+struct ExpectedIncome: Identifiable, Codable, Equatable {
+    var id = UUID()
+    var amount: Double
+    var note: String = ""
+}
+
 struct AppData: Codable {
     var beginningBalance: Double
     var paycheckAmount: Double
@@ -34,5 +40,6 @@ struct AppData: Codable {
     var categories: [Category]
     var transactions: [Transaction]
     var expectedExpenses: [ExpectedExpense]
+    var expectedIncome: [ExpectedIncome] = []
     var lastPeriodStart: Date
 }
