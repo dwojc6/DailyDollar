@@ -11,6 +11,7 @@ struct ForecastTab: View {
     @EnvironmentObject var manager: BudgetManager
     
     @State private var showingAddExpected = false
+    @State private var showingAddExpectedIncome = false
     
     var body: some View {
         NavigationStack {
@@ -64,10 +65,32 @@ struct ForecastTab: View {
                         manager.saveData()
                     }
                     
-                    Button("Add Expected Expense") {
-                        showingAddExpected = true
-                    }
-                }
+                     Button("Add Expected Expense") {
+                         showingAddExpected = true
+                     }
+                 }
+
+                 Section("Other Expected Income") {
+                     if manager.expectedIncome.isEmpty {
+                         Text("None added")
+                             .foregroundStyle(.secondary)
+                     }
+                     ForEach(manager.expectedIncome) { income in
+                         HStack {
+                             Text(income.note.isEmpty ? "Income" : income.note)
+                             Spacer()
+                             Text(income.amount, format: .currency(code: "USD"))
+                         }
+                     }
+                     .onDelete { indices in
+                         manager.expectedIncome.remove(atOffsets: indices)
+                         manager.saveData()
+                     }
+
+                     Button("Add Expected Income") {
+                         showingAddExpectedIncome = true
+                     }
+                 }
                 
                 Section {
                     HStack {
@@ -84,8 +107,11 @@ struct ForecastTab: View {
             }
             .navigationTitle("Next Month Forecast")
             .sheet(isPresented: $showingAddExpected) {
-                AddExpectedExpenseView()
-            }
+                 AddExpectedExpenseView()
+             }
+             .sheet(isPresented: $showingAddExpectedIncome) {
+                 AddExpectedIncomeView()
+             }
         }
     }
 }
