@@ -15,9 +15,9 @@ struct ForecastTab: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Rollover from Current Period") {
-                    Text(manager.remainingCurrent(), format: .currency(code: "USD"))
-                }
+                 Section("Rollover from Current Period") {
+                     Text(manager.rolloverAmount(), format: .currency(code: "USD"))
+                 }
                 
                 Section("Next Paycheck") {
                     Text(manager.paycheckAmount, format: .currency(code: "USD"))
