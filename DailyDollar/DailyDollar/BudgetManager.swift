@@ -129,6 +129,14 @@ class BudgetManager: ObservableObject {
     func remainingCurrent() -> Double {
         beginningBalance + paycheckAmount + totalIncomeCurrent() - totalSpentCurrent()
     }
+
+    func totalUnallocatedBudget() -> Double {
+        categories.reduce(0) { $0 + max(0, $1.budget - spentForCategory($1)) }
+    }
+
+    func rolloverAmount() -> Double {
+        remainingCurrent() - totalUnallocatedBudget()
+    }
     
     func spentForCategory(_ category: Category) -> Double {
         transactionsInCurrentPeriod()
@@ -177,6 +185,6 @@ class BudgetManager: ObservableObject {
     }
     
     func forecastedEnding() -> Double {
-        remainingCurrent() + paycheckAmount - totalBudgetedExpenses() - totalExpectedAdditional() + totalBudgetedIncome()
+        rolloverAmount() + paycheckAmount - totalBudgetedExpenses() - totalExpectedAdditional() + totalBudgetedIncome()
     }
 }
