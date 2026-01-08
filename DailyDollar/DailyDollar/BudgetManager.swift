@@ -25,6 +25,7 @@ class BudgetManager: ObservableObject {
     ]
     @Published var transactions: [Transaction] = []
     @Published var expectedExpenses: [ExpectedExpense] = []
+    @Published var expectedIncome: [ExpectedIncome] = []
     @Published var lastPeriodStart: Date = Date.distantPast
     
     private let saveKey = "BudgetAppData"
@@ -53,6 +54,7 @@ class BudgetManager: ObservableObject {
             categories: categories,
             transactions: transactions,
             expectedExpenses: expectedExpenses,
+            expectedIncome: expectedIncome,
             lastPeriodStart: lastPeriodStart
         )
         if let encoded = try? JSONEncoder().encode(data) {
@@ -69,6 +71,7 @@ class BudgetManager: ObservableObject {
         categories = decoded.categories
         transactions = decoded.transactions
         expectedExpenses = decoded.expectedExpenses
+        expectedIncome = decoded.expectedIncome
         lastPeriodStart = decoded.lastPeriodStart
     }
     
@@ -183,8 +186,12 @@ class BudgetManager: ObservableObject {
     func totalExpectedAdditional() -> Double {
         expectedExpenses.reduce(0) { $0 + $1.amount }
     }
+
+    func totalExpectedIncome() -> Double {
+        expectedIncome.reduce(0) { $0 + $1.amount }
+    }
     
     func forecastedEnding() -> Double {
-        rolloverAmount() + paycheckAmount - totalBudgetedExpenses() - totalExpectedAdditional() + totalBudgetedIncome()
+        rolloverAmount() + paycheckAmount - totalBudgetedExpenses() - totalExpectedAdditional() + totalBudgetedIncome() + totalExpectedIncome()
     }
 }
