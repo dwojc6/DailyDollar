@@ -12,6 +12,8 @@ struct ForecastTab: View {
     
     @State private var showingAddExpected = false
     @State private var showingAddExpectedIncome = false
+    @State private var editingCategoryId: UUID?
+    @FocusState private var focusedField: UUID?
     
     var body: some View {
         NavigationStack {
@@ -28,15 +30,49 @@ struct ForecastTab: View {
                         .foregroundStyle(.secondary)
                 }
                 
-                Section("Planned Category Spending") {
-                    ForEach(manager.categories) { category in
-                        HStack {
-                            Text(category.name)
-                            Spacer()
-                            Text(category.budget, format: .currency(code: "USD"))
-                        }
-                    }
-                }
+                 Section("Planned Category Spending") {
+                     ForEach(manager.categories) { category in
+                         HStack {
+                             Text(category.name)
+                             Spacer()
+                             if editingCategoryId == category.id {
+                                 TextField("", value: Binding(get: { manager.forecastBudgets[category.id] ?? category.budget }, set: { manager.forecastBudgets[category.id] = $0; manager.saveData() }), format: .currency(code: "USD"))
+                                     .keyboardType(.decimalPad)
+                                     .frame(width: 100)
+                                     .multilineTextAlignment(.trailing)
+                                     .focused($focusedField, equals: category.id)
+                                     .toolbar {
+                                         ToolbarItemGroup(placement: .keyboard) {
+                                             Spacer()
+                                             Button("Done") {
+                                                 editingCategoryId = nil
+                                                 focusedField = nil
+                                             }
+                                             .foregroundStyle(.blue)
+                                         }
+                                     }
+                                     .onSubmit {
+                                         editingCategoryId = nil
+                                         focusedField = nil
+                                     }
+                             } else {
+                                 Text(manager.forecastBudgets[category.id] ?? category.budget, format: .currency(code: "USD"))
+                             }
+                         }
+                         .contentShape(Rectangle())
+                         .onTapGesture {
+                             if editingCategoryId == category.id {
+                                 editingCategoryId = nil
+                                 focusedField = nil
+                             } else {
+                                 editingCategoryId = category.id
+                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                     focusedField = category.id
+                                 }
+                             }
+                         }
+                     }
+                 }
                 
                 Section {
                     HStack {
@@ -109,9 +145,44 @@ struct ForecastTab: View {
             .sheet(isPresented: $showingAddExpected) {
                  AddExpectedExpenseView()
              }
-             .sheet(isPresented: $showingAddExpectedIncome) {
-                 AddExpectedIncomeView()
-             }
+              .sheet(isPresented: $showingAddExpectedIncome) {
+                  AddExpectedIncomeView()
+              }
         }
+    }
+}
+
+struct ForecastBudgetEditView: View {
+    @EnvironmentObject var manager: BudgetManager
+    let category: Category
+    @State private var budget: Double
+    @Environment(\.dismiss) var dismiss
+
+    init(category: Category, initialBudget: Double) {
+        self.category = category
+        _budget = State(initialValue: initialBudget)
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            TextField(category.name, value: $budget, format: .currency(code: "USD"))
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.roundedBorder)
+                .multilineTextAlignment(.center)
+                .font(.title2)
+            HStack(spacing: 20) {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .foregroundStyle(.secondary)
+                Button("Save") {
+                    manager.forecastBudgets[category.id] = budget
+                    manager.saveData()
+                    dismiss()
+                }
+                .bold()
+            }
+        }
+        .padding()
     }
 }

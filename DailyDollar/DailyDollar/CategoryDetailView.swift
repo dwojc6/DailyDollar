@@ -12,9 +12,11 @@ import Combine
 struct CategoryDetailView: View {
     @EnvironmentObject var manager: BudgetManager
     let category: Category
+    var isForecast: Bool = false
     
     @State private var showingAddTransaction = false
     @State private var budgetString = ""
+    @State private var forecastBudget: Double = 0
     
     private var categoryBinding: Binding<Category> {
         Binding(
@@ -38,46 +40,60 @@ struct CategoryDetailView: View {
         
         return List {
             Section("Category Settings") {
-                TextField("Name", text: categoryBinding.name)
-                HStack {
-                    Text("$")
-                    TextField("", text: $budgetString, prompt: Text("0.00"))
+                if !isForecast {
+                    TextField("Name", text: categoryBinding.name)
+                }
+                if isForecast {
+                    TextField("", value: $forecastBudget, format: .currency(code: "USD"))
                         .keyboardType(.decimalPad)
-                        .onChange(of: budgetString) { _, newValue in
-                            if let doubleValue = Double(newValue) {
-                                var newCategory = categoryBinding.wrappedValue
-                                newCategory.budget = doubleValue
-                                categoryBinding.wrappedValue = newCategory
-                            }
+                        .multilineTextAlignment(.leading)
+                        .onChange(of: forecastBudget) { _, _ in
+                            manager.forecastBudgets[category.id] = forecastBudget
+                            manager.saveData()
                         }
+                } else {
+                    HStack(spacing: 0) {
+                        Text("$")
+                        TextField("", text: $budgetString, prompt: Text("0.00"))
+                            .keyboardType(.decimalPad)
+                            .onChange(of: budgetString) { _, newValue in
+                                if let doubleValue = Double(newValue) {
+                                    var newCategory = categoryBinding.wrappedValue
+                                    newCategory.budget = doubleValue
+                                    categoryBinding.wrappedValue = newCategory
+                                }
+                            }
+                    }
                 }
             }
             
-            Section("Transactions (\(categoryTransactions.count))") {
-                ForEach(categoryTransactions) { transaction in
-                    NavigationLink(destination: EditTransactionView(transaction: transaction)) {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(transaction.date, formatter: BudgetManager.shortDateFormatter)
-                                Spacer()
-                                Text(transaction.amount, format: .currency(code: "USD"))
-                            }
-                            if !transaction.note.isEmpty {
-                                Text(transaction.note)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+            if !isForecast {
+                Section("Transactions (\(categoryTransactions.count))") {
+                    ForEach(categoryTransactions) { transaction in
+                        NavigationLink(destination: EditTransactionView(transaction: transaction)) {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(transaction.date, formatter: BudgetManager.shortDateFormatter)
+                                    Spacer()
+                                    Text(transaction.amount, format: .currency(code: "USD"))
+                                }
+                                if !transaction.note.isEmpty {
+                                    Text(transaction.note)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
-                }
-                .onDelete { indices in
-                    let toDelete = indices.map { categoryTransactions[$0] }
-                    manager.transactions.removeAll { toDelete.contains($0) }
-                    manager.saveData()
-                }
-                
-                Button("Add Transaction") {
-                    showingAddTransaction = true
+                    .onDelete { indices in
+                        let toDelete = indices.map { categoryTransactions[$0] }
+                        manager.transactions.removeAll { toDelete.contains($0) }
+                        manager.saveData()
+                    }
+                    
+                    Button("Add Transaction") {
+                        showingAddTransaction = true
+                    }
                 }
             }
             
@@ -101,7 +117,11 @@ struct CategoryDetailView: View {
             AddTransactionView(categoryId: category.id)
         }
         .onAppear {
-            budgetString = String(format: "%.2f", category.budget)
+            if isForecast {
+                forecastBudget = manager.forecastBudgets[category.id] ?? category.budget
+            } else {
+                budgetString = String(format: "%.2f", category.budget)
+            }
         }
     }
 }

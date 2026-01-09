@@ -42,4 +42,5 @@ struct AppData: Codable {
     var expectedExpenses: [ExpectedExpense]
     var expectedIncome: [ExpectedIncome] = []
     var lastPeriodStart: Date
+    var forecastBudgets: [UUID: Double] = [:]
 }
