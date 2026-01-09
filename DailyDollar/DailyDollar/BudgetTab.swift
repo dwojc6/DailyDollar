@@ -6,38 +6,40 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct BudgetTab: View {
     @EnvironmentObject var manager: BudgetManager
-    
+
     @State private var showingAddTransaction = false
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                 Section("Beginning Balance") {
-                     Text("Amount")
-                         .bold()
-                     TextField("", value: $manager.beginningBalance, format: .currency(code: "USD"))
-                         .keyboardType(.decimalPad)
-                         .multilineTextAlignment(.leading)
-                         .onChange(of: manager.beginningBalance) { _, _ in
-                             manager.saveData()
-                         }
-                 }
+                  Section("Beginning Balance") {
+                      Text("Amount")
+                          .bold()
+                      TextField("", value: $manager.beginningBalance, format: .currency(code: "USD"))
+                          .keyboardType(.decimalPad)
+                          .multilineTextAlignment(.leading)
+                          .onChange(of: manager.beginningBalance) { _, _ in
+                              manager.saveData()
+                          }
+                  }
                 
-                 Section("Paycheck") {
-                     Text("Monthly Amount")
-                         .bold()
-                     TextField("", value: $manager.paycheckAmount, format: .currency(code: "USD"))
-                         .keyboardType(.decimalPad)
-                         .multilineTextAlignment(.leading)
-                         .onChange(of: manager.paycheckAmount) { _, _ in
-                             manager.saveData()
-                         }
-                     .onChange(of: manager.paycheckAmount) { _, _ in
-                         manager.saveData()
-                     }
+                  Section("Paycheck") {
+                      Text("Monthly Amount")
+                          .bold()
+                      TextField("", value: $manager.paycheckAmount, format: .currency(code: "USD"))
+                          .keyboardType(.decimalPad)
+                          .multilineTextAlignment(.leading)
+                          .onChange(of: manager.paycheckAmount) { _, _ in
+                              manager.saveData()
+                          }
                     
                     Picker("Paycheck Day of Month", selection: $manager.paycheckDay) {
                         ForEach(1...31, id: \.self) { day in
@@ -63,9 +65,9 @@ struct BudgetTab: View {
                                     Spacer()
                                     let spent = manager.spentForCategory(category)
                                     let isIncome = category.name.lowercased().contains("income")
-                                    Text("\(spent, format: .currency(code: "USD")) / \(category.budget, format: .currency(code: "USD"))")
-                                        .font(.callout)
-                                        .foregroundStyle(spent > category.budget ? (isIncome ? .green : .red) : .primary)
+        Text("$\(spent, format: .number.precision(.fractionLength(2))) / $\(category.budget, format: .number.precision(.fractionLength(2)))")
+            .font(.callout)
+            .foregroundStyle(spent > category.budget ? (isIncome ? .green : .red) : .primary)
                                 }
                                 ProgressView(value: min(manager.spentForCategory(category), category.budget), total: max(category.budget, 0.01))
                                     .progressViewStyle(LinearProgressViewStyle())
@@ -108,6 +110,13 @@ struct BudgetTab: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     EditButton()
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        hideKeyboard()
+                    }
+                    .foregroundStyle(.blue)
                 }
             }
              .sheet(isPresented: $showingAddTransaction) {
