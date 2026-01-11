@@ -13,10 +13,16 @@ struct CategoryDetailView: View {
     @EnvironmentObject var manager: BudgetManager
     let category: Category
     var isForecast: Bool = false
-    
+
     @State private var showingAddTransaction = false
     @State private var budgetString = ""
     @State private var forecastBudget: Double = 0
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
     
     private var categoryBinding: Binding<Category> {
         Binding(
@@ -113,6 +119,15 @@ struct CategoryDetailView: View {
             }
         }
         .navigationTitle(category.name)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    hideKeyboard()
+                }
+                .foregroundStyle(.blue)
+            }
+        }
         .sheet(isPresented: $showingAddTransaction) {
             AddTransactionView(categoryId: category.id)
         }

@@ -16,10 +16,43 @@ struct HistoryTab: View {
         let calendar = Calendar.current
         for i in 0..<12 {
             if let period = calendar.date(byAdding: .month, value: -i, to: current) {
-                periods.append(period)
+                let periodEnd = calendar.date(byAdding: .month, value: 1, to: period)!
+                let hasTransactions = manager.transactions.contains { $0.date >= period && $0.date < periodEnd }
+                if hasTransactions {
+                    periods.append(period)
+                }
             }
         }
         return periods
+    }
+
+    private struct AnnualSpending: Identifiable {
+        let id = UUID()
+        let category: Category
+        let amount: Double
+    }
+
+    private var annualSpendingByCategory: [AnnualSpending] {
+        let calendar = Calendar.current
+        let oneYearAgo = calendar.date(byAdding: .year, value: -1, to: Date())!
+        let incomeCategoryIds = manager.categories.filter { $0.name.lowercased().contains("income") }.map { $0.id }
+        
+        var spendingByCategory: [UUID: Double] = [:]
+        
+        for transaction in manager.transactions {
+            if transaction.date >= oneYearAgo && !incomeCategoryIds.contains(transaction.categoryId) {
+                spendingByCategory[transaction.categoryId, default: 0] += transaction.amount
+            }
+        }
+        
+        var result: [AnnualSpending] = []
+        for category in manager.categories {
+            if let amount = spendingByCategory[category.id], amount > 0 {
+                result.append(AnnualSpending(category: category, amount: amount))
+            }
+        }
+        
+        return result.sorted { $0.amount > $1.amount }
     }
 
     @State private var showingDocumentPicker = false
@@ -68,9 +101,29 @@ struct HistoryTab: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(pastPeriods, id: \.self) { periodStart in
-                    NavigationLink(destination: PeriodDetailView(periodStart: periodStart)) {
-                        Text(periodStart, formatter: BudgetManager.monthYearFormatter)
+                Section("Annual Spending by Category") {
+                    if annualSpendingByCategory.isEmpty {
+                        Text("No transactions in the past year")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(annualSpendingByCategory) { item in
+                        HStack {
+                            Text(item.category.name)
+                            Spacer()
+                            Text(item.amount, format: .currency(code: "USD"))
+                        }
+                    }
+                }
+                
+                Section("Past Transactions") {
+                    if pastPeriods.isEmpty {
+                        Text("No periods with transactions")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(pastPeriods, id: \.self) { periodStart in
+                        NavigationLink(destination: PeriodDetailView(periodStart: periodStart)) {
+                            Text(periodStart, formatter: BudgetManager.monthYearFormatter)
+                        }
                     }
                 }
             }

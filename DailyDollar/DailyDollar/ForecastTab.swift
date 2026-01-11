@@ -35,42 +35,32 @@ struct ForecastTab: View {
                          HStack {
                              Text(category.name)
                              Spacer()
-                             if editingCategoryId == category.id {
-                                 TextField("", value: Binding(get: { manager.forecastBudgets[category.id] ?? category.budget }, set: { manager.forecastBudgets[category.id] = $0; manager.saveData() }), format: .currency(code: "USD"))
-                                     .keyboardType(.decimalPad)
-                                     .frame(width: 100)
-                                     .multilineTextAlignment(.trailing)
-                                     .focused($focusedField, equals: category.id)
-                                     .toolbar {
-                                         ToolbarItemGroup(placement: .keyboard) {
-                                             Spacer()
-                                             Button("Done") {
-                                                 editingCategoryId = nil
-                                                 focusedField = nil
-                                             }
-                                             .foregroundStyle(.blue)
-                                         }
-                                     }
-                                     .onSubmit {
-                                         editingCategoryId = nil
-                                         focusedField = nil
-                                     }
+                              if editingCategoryId == category.id {
+                                  TextField("", value: Binding(get: { manager.forecastBudgets[category.id] ?? category.budget }, set: { manager.forecastBudgets[category.id] = $0; manager.saveData() }), format: .currency(code: "USD"))
+                                      .keyboardType(.decimalPad)
+                                      .frame(width: 100)
+                                      .multilineTextAlignment(.trailing)
+                                      .focused($focusedField, equals: category.id)
+                                      .onSubmit {
+                                          editingCategoryId = nil
+                                          focusedField = nil
+                                      }
                              } else {
                                  Text(manager.forecastBudgets[category.id] ?? category.budget, format: .currency(code: "USD"))
                              }
                          }
                          .contentShape(Rectangle())
-                         .onTapGesture {
-                             if editingCategoryId == category.id {
-                                 editingCategoryId = nil
-                                 focusedField = nil
-                             } else {
-                                 editingCategoryId = category.id
-                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                     focusedField = category.id
-                                 }
-                             }
-                         }
+                          .onTapGesture {
+                              if editingCategoryId == category.id {
+                                  editingCategoryId = nil
+                                  focusedField = nil
+                              } else {
+                                  editingCategoryId = category.id
+                                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                      focusedField = category.id
+                                  }
+                              }
+                          }
                      }
                  }
                 
@@ -145,9 +135,19 @@ struct ForecastTab: View {
             .sheet(isPresented: $showingAddExpected) {
                  AddExpectedExpenseView()
              }
-              .sheet(isPresented: $showingAddExpectedIncome) {
-                  AddExpectedIncomeView()
-              }
+            .sheet(isPresented: $showingAddExpectedIncome) {
+                   AddExpectedIncomeView()
+               }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            editingCategoryId = nil
+                            focusedField = nil
+                        }
+                        .foregroundStyle(.blue)
+                    }
+                }
         }
     }
 }

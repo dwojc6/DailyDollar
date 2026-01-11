@@ -1,50 +1,38 @@
 //
-//  DailyDollarApp.swift
+//  DocumentPicker.swift
 //  DailyDollar
 //
 //  Created by David Wojcik III on 1/7/26.
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
-@main
-struct BudgetTrackerApp: App {
-    let manager = BudgetManager.shared
-    @State private var showingFirstTime = false
-    
-    var body: some Scene {
-        WindowGroup {
-            TabView {
-                BudgetTab()
-                    .tabItem {
-                        Label("Current", systemImage: "dollarsign.circle")
-                    }
-                
-                ForecastTab()
-                    .tabItem {
-                        Label("Forecast", systemImage: "chart.line.uptrend.xyaxis")
-                    }
+struct DocumentPicker: View {
+    @Binding var isPresented: Bool
+    var onPick: (URL) -> Void
 
-                SavingsTab()
-                    .tabItem {
-                        Label("Savings", systemImage: "banknote")
-                    }
+    @State private var isPickerPresented = false
 
-                HistoryTab()
-                    .tabItem {
-                        Label("History", systemImage: "clock")
+    var body: some View {
+        Color.clear
+            .fileImporter(
+                isPresented: $isPickerPresented,
+                allowedContentTypes: [.commaSeparatedText, .text, .data],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    if let url = urls.first {
+                        onPick(url)
                     }
-            }
-            .environmentObject(manager)
-            .onAppear {
-                manager.checkPeriodChange()
-                if manager.beginningBalance == 0 && manager.transactions.isEmpty {
-                    showingFirstTime = true
+                case .failure(let error):
+                    print("File import failed: \(error.localizedDescription)")
                 }
+                isPresented = false
             }
-            .sheet(isPresented: $showingFirstTime) {
-                AddBeginningBalanceView()
+            .onAppear {
+                isPickerPresented = true
             }
-        }
     }
 }

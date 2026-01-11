@@ -14,7 +14,13 @@ struct AddExpectedExpenseView: View {
     @State private var note: String = ""
     
     @Environment(\.dismiss) private var dismiss
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -28,21 +34,28 @@ struct AddExpectedExpenseView: View {
                 }
             }
             .navigationTitle("New Expected Expense")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                     Button("Save") {
-                         let amount = Double(amountString) ?? 0
-                         let expense = ExpectedExpense(amount: amount, note: note)
-                         manager.expectedExpenses.append(expense)
-                         manager.saveData()
-                         dismiss()
+             .toolbar {
+                 ToolbarItem(placement: .cancellationAction) {
+                     Button("Cancel") { dismiss() }
+                 }
+                 ToolbarItem(placement: .confirmationAction) {
+                      Button("Save") {
+                          let amount = Double(amountString) ?? 0
+                          let expense = ExpectedExpense(amount: amount, note: note)
+                          manager.expectedExpenses.append(expense)
+                          manager.saveData()
+                          dismiss()
+                      }
+                      .disabled((Double(amountString) ?? 0) <= 0)
+                 }
+                 ToolbarItemGroup(placement: .keyboard) {
+                     Spacer()
+                     Button("Done") {
+                         hideKeyboard()
                      }
-                     .disabled((Double(amountString) ?? 0) <= 0)
-                }
-            }
+                     .foregroundStyle(.blue)
+                 }
+             }
         }
     }
 }

@@ -16,7 +16,13 @@ struct AddTransactionView: View {
     @State private var date: Date = Date()
     
     @Environment(\.dismiss) private var dismiss
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -45,6 +51,13 @@ struct AddTransactionView: View {
                     }
                     .disabled((Double(amountString) ?? 0) <= 0)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        hideKeyboard()
+                    }
+                    .foregroundStyle(.blue)
+                }
             }
         }
     }
@@ -70,7 +83,13 @@ struct EditTransactionView: View {
     }
     
     @Environment(\.dismiss) private var dismiss
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -101,6 +120,13 @@ struct EditTransactionView: View {
                     }
                     .disabled(amount <= 0)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        hideKeyboard()
+                    }
+                    .foregroundStyle(.blue)
+                }
             }
         }
     }
@@ -117,7 +143,13 @@ struct AddWithdrawalView: View {
     @State private var date: Date = Date()
     
     @Environment(\.dismiss) private var dismiss
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -141,6 +173,13 @@ struct AddWithdrawalView: View {
                         dismiss()
                     }
                     .disabled(amount <= 0)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        hideKeyboard()
+                    }
+                    .foregroundStyle(.blue)
                 }
             }
         }

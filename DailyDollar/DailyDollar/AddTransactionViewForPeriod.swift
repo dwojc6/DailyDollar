@@ -17,7 +17,13 @@ struct AddTransactionViewForPeriod: View {
     @State private var note: String = ""
     
     @Environment(\.dismiss) private var dismiss
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     private var periodEnd: Date {
         let calendar = Calendar.current
         let nextMonth = calendar.date(byAdding: .month, value: 1, to: periodStart)!
@@ -47,16 +53,23 @@ struct AddTransactionViewForPeriod: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                     Button("Save") {
-                         let amount = Double(amountString) ?? 0
-                         let transaction = Transaction(amount: amount, date: date, note: note, categoryId: selectedCategoryId)
-                         manager.transactions.append(transaction)
-                         manager.saveData()
-                         dismiss()
+                 ToolbarItem(placement: .confirmationAction) {
+                      Button("Save") {
+                          let amount = Double(amountString) ?? 0
+                          let transaction = Transaction(amount: amount, date: date, note: note, categoryId: selectedCategoryId)
+                          manager.transactions.append(transaction)
+                          manager.saveData()
+                          dismiss()
+                      }
+                      .disabled((Double(amountString) ?? 0) <= 0)
+                 }
+                 ToolbarItemGroup(placement: .keyboard) {
+                     Spacer()
+                     Button("Done") {
+                         hideKeyboard()
                      }
-                     .disabled((Double(amountString) ?? 0) <= 0)
-                }
+                     .foregroundStyle(.blue)
+                 }
             }
              .onAppear {
                  if let firstCategoryId = manager.categories.first?.id {

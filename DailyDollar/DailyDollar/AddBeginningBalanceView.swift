@@ -13,7 +13,13 @@ struct AddBeginningBalanceView: View {
     @State private var amountString = ""
     
     @Environment(\.dismiss) private var dismiss
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -34,6 +40,13 @@ struct AddBeginningBalanceView: View {
                         dismiss()
                     }
                     .disabled((Double(amountString) ?? 0) < 0)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        hideKeyboard()
+                    }
+                    .foregroundStyle(.blue)
                 }
             }
         }
